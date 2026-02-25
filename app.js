@@ -366,6 +366,8 @@ class InsightApp {
         this.connectGithubBtn.addEventListener('click', () => this.connectGitHub());
         this.syncUpBtn.addEventListener('click', () => this.handleSyncUp());
         this.syncDownBtn.addEventListener('click', () => this.handleSyncDown());
+        this.changeTokenBtn = document.getElementById('changeTokenBtn');
+        this.changeTokenBtn.addEventListener('click', () => this.changeToken());
         this.disconnectGithubBtn.addEventListener('click', () => this.disconnectGitHub());
         this.downloadBackupBtn.addEventListener('click', () => this.exportAllData());
         this.uploadBackupBtn.addEventListener('click', () => this.fileInput.click());
@@ -1473,6 +1475,44 @@ class InsightApp {
 
         this.syncDownBtn.disabled = false;
         this.syncDownBtn.textContent = '⬇️ 从云端下载';
+    }
+
+    changeToken() {
+        const newToken = prompt('请输入新的 GitHub Token:\n\n⚠️ 这将替换当前的 Token，但不会影响云端数据。');
+        
+        if (!newToken || !newToken.trim()) {
+            return; // 用户取消或输入为空
+        }
+
+        const token = newToken.trim();
+        
+        // 保存 Gist ID，避免丢失
+        const gistId = localStorage.getItem('insight_gist_id');
+        
+        // 更新 Token
+        this.cloudSync.saveToken(token);
+        
+        // 测试新 Token 是否有效
+        this.syncUpBtn.disabled = true;
+        this.syncUpBtn.textContent = '测试中...';
+        
+        this.cloudSync.syncUp().then(result => {
+            if (result.success) {
+                alert('✅ Token 更换成功！');
+                this.updateSyncUI();
+            } else {
+                alert('❌ 新 Token 无效: ' + result.message + '\n\n已恢复旧 Token。');
+                // 如果新 Token 失败，恢复旧状态
+                if (gistId) {
+                    localStorage.setItem('insight_gist_id', gistId);
+                }
+            }
+        }).catch(error => {
+            alert('❌ Token 测试失败: ' + error.message);
+        }).finally(() => {
+            this.syncUpBtn.disabled = false;
+            this.syncUpBtn.textContent = '⬆️ 上传到云端';
+        });
     }
 
     disconnectGitHub() {
