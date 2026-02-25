@@ -146,71 +146,124 @@ body {
 .tags-bar-list {
     flex: 1;
     display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
+    gap: 8px;
     align-items: center;
-    min-height: 32px;
+    min-height: 36px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    white-space: nowrap;
+    padding-bottom: 4px;
+}
+
+.tags-bar-list::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
 }
 
 .tags-bar-empty {
     font-size: 13px;
     color: var(--text-tertiary);
+    white-space: normal;
 }
 
 .tag-bar-item {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 10px;
+    padding: 6px 12px;
     background: var(--bg-color);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
+    border: 1.5px solid;
+    border-radius: 20px;
     font-size: 13px;
-    color: var(--text-secondary);
     transition: all 0.2s;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* Tag color variations */
+.tag-bar-item[data-color="0"] {
+    background: #fef3c7;
+    border-color: #fbbf24;
+    color: #92400e;
+}
+
+.tag-bar-item[data-color="1"] {
+    background: #dbeafe;
+    border-color: #60a5fa;
+    color: #1e3a8a;
+}
+
+.tag-bar-item[data-color="2"] {
+    background: #fce7f3;
+    border-color: #f472b6;
+    color: #831843;
+}
+
+.tag-bar-item[data-color="3"] {
+    background: #dcfce7;
+    border-color: #4ade80;
+    color: #14532d;
+}
+
+.tag-bar-item[data-color="4"] {
+    background: #e0e7ff;
+    border-color: #818cf8;
+    color: #312e81;
+}
+
+.tag-bar-item[data-color="5"] {
+    background: #ffedd5;
+    border-color: #fb923c;
+    color: #7c2d12;
+}
+
+.tag-bar-item[data-color="6"] {
+    background: #fae8ff;
+    border-color: #c084fc;
+    color: #581c87;
+}
+
+.tag-bar-item[data-color="7"] {
+    background: #cffafe;
+    border-color: #22d3ee;
+    color: #164e63;
 }
 
 .tag-bar-item:active {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
     transform: scale(0.95);
-}
-
-.tag-bar-item:active .tag-bar-item-name {
-    color: white;
-}
-
-.tag-bar-item:active .tag-bar-item-count {
-    color: rgba(255, 255, 255, 0.8);
+    opacity: 0.8;
 }
 
 .tag-bar-item-name {
-    color: var(--primary-color);
     font-weight: 500;
 }
 
 .tag-bar-item-count {
-    font-size: 12px;
-    color: var(--text-tertiary);
+    font-size: 11px;
+    opacity: 0.7;
 }
 
 .tag-bar-delete {
-    width: 16px;
-    height: 16px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 18px;
+    height: 18px;
+    margin-left: 2px;
     cursor: pointer;
-    color: var(--text-tertiary);
-    transition: color 0.2s;
+    color: currentColor;
+    opacity: 0.6;
+    transition: opacity 0.2s;
     -webkit-tap-highlight-color: transparent;
 }
 
 .tag-bar-delete:hover,
 .tag-bar-delete:active {
-    color: var(--danger-color);
+    opacity: 1;
 }
 
 /* Tag Dropdown (输入#时显示) */
