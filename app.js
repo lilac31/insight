@@ -680,9 +680,10 @@ class InsightApp {
             return;
         }
 
-        this.tagsBarList.innerHTML = allTags.map(tag => {
+        this.tagsBarList.innerHTML = allTags.map((tag, index) => {
+            const colorIndex = this.getTagColor(tag.name);
             return `
-                <div class="tag-bar-item">
+                <div class="tag-bar-item" data-color="${colorIndex}">
                     <span class="tag-bar-item-name">${tag.name}</span>
                     <span class="tag-bar-item-count">${tag.count}</span>
                     <span class="tag-bar-delete" data-tag="${tag.name}">
@@ -710,6 +711,15 @@ class InsightApp {
                 this.insertTagToInputArea(tagName);
             });
         });
+    }
+
+    getTagColor(tagName) {
+        // 使用标签名生成一个固定的颜色索引（0-7）
+        let hash = 0;
+        for (let i = 0; i < tagName.length; i++) {
+            hash = tagName.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return Math.abs(hash) % 8;
     }
 
     getAllTagsWithUsage() {
