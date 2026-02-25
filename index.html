@@ -6,6 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Insight - 你的思考笔记</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💡</text></svg>">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="sync.css">
 </head>
@@ -277,7 +278,7 @@
                                     <li>创建 Personal Access Token，勾选 <code>gist</code> 权限</li>
                                     <li>复制 Token 并粘贴到下方输入框</li>
                                 </ol>
-                                <div class="sync-input-group">
+                                <form class="sync-input-group" onsubmit="return false;">
                                     <input 
                                         type="password" 
                                         id="githubToken" 
@@ -285,8 +286,8 @@
                                         placeholder="粘贴 GitHub Token"
                                         autocomplete="off"
                                     >
-                                    <button class="btn-primary" id="connectGithubBtn">连接</button>
-                                </div>
+                                    <button type="button" class="btn-primary" id="connectGithubBtn">连接</button>
+                                </form>
                             </div>
                             <div class="sync-connected" id="githubConnected" style="display: none;">
                                 <p class="sync-success">✅ 已连接到 GitHub Gist</p>
