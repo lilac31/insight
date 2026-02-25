@@ -261,6 +261,7 @@ class InsightApp {
         // GitHub Sync Elements
         this.closeSyncBtn = document.getElementById('closeSyncBtn');
         this.githubToken = document.getElementById('githubToken');
+        this.existingGistId = document.getElementById('existingGistId');
         this.connectGithubBtn = document.getElementById('connectGithubBtn');
         this.githubConnected = document.getElementById('githubConnected');
         this.gistIdDisplay = document.getElementById('gistIdDisplay');
@@ -1484,6 +1485,7 @@ class InsightApp {
     // GitHub Sync Methods
     connectGitHub() {
         const token = this.githubToken.value.trim();
+        const gistId = this.existingGistId.value.trim();
         
         if (!token) {
             alert('请输入 GitHub Token');
@@ -1493,25 +1495,47 @@ class InsightApp {
         this.connectGithubBtn.disabled = true;
         this.connectGithubBtn.textContent = '连接中...';
         
+        // 保存 Token
         this.cloudSync.saveToken(token);
         
-        // 测试 Token 是否有效
-        this.cloudSync.syncUp().then(result => {
-            if (result.success) {
-                alert('✅ 连接成功！');
+        // 如果提供了 Gist ID，先保存它
+        if (gistId) {
+            localStorage.setItem('insight_gist_id', gistId);
+            console.log('📌 使用指定的 Gist ID:', gistId);
+            
+            // 尝试从这个 Gist 读取数据来验证
+            this.cloudSync.getGist().then(() => {
+                alert('✅ 连接成功！\n\n已连接到指定的 Gist。');
                 this.updateSyncUI();
                 this.cloudSync.startAutoSync();
-            } else {
-                alert('❌ Token 无效: ' + result.message);
+            }).catch(error => {
+                alert('❌ 无法访问指定的 Gist: ' + error.message + '\n\n请检查:\n1. Gist ID 是否正确\n2. Token 是否有效\n3. Token 账号是否与 Gist 所有者相同');
                 this.cloudSync.clearToken();
-            }
-        }).catch(error => {
-            alert('❌ 连接失败: ' + error.message);
-            this.cloudSync.clearToken();
-        }).finally(() => {
-            this.connectGithubBtn.disabled = false;
-            this.connectGithubBtn.textContent = '💾 保存并连接';
-        });
+                localStorage.removeItem('insight_gist_id');
+            }).finally(() => {
+                this.connectGithubBtn.disabled = false;
+                this.connectGithubBtn.textContent = '💾 连接';
+            });
+        } else {
+            // 没有提供 Gist ID，创建新的或使用现有的
+            this.cloudSync.syncUp().then(result => {
+                if (result.success) {
+                    const newGistId = localStorage.getItem('insight_gist_id');
+                    alert('✅ 连接成功！\n\n已创建新的 Gist。\nGist ID: ' + newGistId + '\n\n请复制此 ID 用于其他设备同步。');
+                    this.updateSyncUI();
+                    this.cloudSync.startAutoSync();
+                } else {
+                    alert('❌ Token 无效: ' + result.message);
+                    this.cloudSync.clearToken();
+                }
+            }).catch(error => {
+                alert('❌ 连接失败: ' + error.message);
+                this.cloudSync.clearToken();
+            }).finally(() => {
+                this.connectGithubBtn.disabled = false;
+                this.connectGithubBtn.textContent = '💾 连接';
+            });
+        }
     }
 
     async handleSyncUp() {

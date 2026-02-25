@@ -283,12 +283,19 @@
                                         type="password" 
                                         id="githubToken" 
                                         class="sync-input" 
-                                        placeholder="粘贴 GitHub Personal Access Token"
+                                        placeholder="GitHub Token (必填)"
                                         autocomplete="off"
                                     >
-                                    <button type="button" class="btn-primary" id="connectGithubBtn">💾 保存并连接</button>
+                                    <input 
+                                        type="text" 
+                                        id="existingGistId" 
+                                        class="sync-input" 
+                                        placeholder="Gist ID (可选 - 用于多设备同步)"
+                                        autocomplete="off"
+                                    >
+                                    <button type="button" class="btn-primary" id="connectGithubBtn">💾 连接</button>
                                 </form>
-                                <p class="sync-tip-note">💡 多设备同步: 在所有设备上使用同一个 GitHub 账号的 Token</p>
+                                <p class="sync-tip-note">💡 新设备同步: 从其他设备复制 Gist ID 并粘贴到上方输入框</p>
                             </div>
                             <div class="sync-connected" id="githubConnected" style="display: none;">
                                 <p class="sync-success">✅ 已连接到 GitHub Gist</p>
