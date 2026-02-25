@@ -1591,49 +1591,6 @@ class InsightApp {
         this.updateSyncUI();
         alert('已断开连接');
     }
-        }
-
-        const token = newToken.trim();
-        
-        // 保存 Gist ID，避免丢失
-        const gistId = localStorage.getItem('insight_gist_id');
-        
-        // 更新 Token
-        this.cloudSync.saveToken(token);
-        
-        // 测试新 Token 是否有效
-        this.syncUpBtn.disabled = true;
-        this.syncUpBtn.textContent = '测试中...';
-        
-        this.cloudSync.syncUp().then(result => {
-            if (result.success) {
-                alert('✅ Token 更换成功！');
-                this.updateSyncUI();
-            } else {
-                alert('❌ 新 Token 无效: ' + result.message + '\n\n已恢复旧 Token。');
-                // 如果新 Token 失败，恢复旧状态
-                if (gistId) {
-                    localStorage.setItem('insight_gist_id', gistId);
-                }
-            }
-        }).catch(error => {
-            alert('❌ Token 测试失败: ' + error.message);
-        }).finally(() => {
-            this.syncUpBtn.disabled = false;
-            this.syncUpBtn.textContent = '⬆️ 上传到云端';
-        });
-    }
-
-    disconnectGitHub() {
-        if (!confirm('确定要断开 GitHub 连接吗？\n\n云端数据不会被删除，只是断开本地连接。')) {
-            return;
-        }
-
-        this.cloudSync.clearToken();
-        this.cloudSync.stopAutoSync();
-        this.updateSyncUI();
-        alert('已断开连接');
-    }
 }
 
 // Initialize app
