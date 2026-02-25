@@ -271,6 +271,20 @@ class InsightApp {
         this.autoSyncEnabled = document.getElementById('autoSyncEnabled');
         this.syncInterval = document.getElementById('syncInterval');
         this.syncSettings = document.getElementById('syncSettings');
+
+        // Debug: 检查关键元素是否存在
+        const missingElements = [];
+        if (!this.syncBtn) missingElements.push('syncBtn');
+        if (!this.exportBtn) missingElements.push('exportBtn');
+        if (!this.tagsBtn) missingElements.push('tagsBtn');
+        if (!this.searchBtn) missingElements.push('searchBtn');
+        if (!this.statsBtn) missingElements.push('statsBtn');
+        
+        if (missingElements.length > 0) {
+            console.error('❌ 缺少的元素:', missingElements.join(', '));
+        } else {
+            console.log('✅ 所有按钮元素已加载');
+        }
     }
 
     initEventListeners() {
@@ -741,12 +755,8 @@ class InsightApp {
     }
 
     getTagColor(tagName) {
-        // 使用标签名生成一个固定的颜色索引（0-7）
-        let hash = 0;
-        for (let i = 0; i < tagName.length; i++) {
-            hash = tagName.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        return Math.abs(hash) % 8;
+        // 使用 storage 的颜色管理方法
+        return this.storage.getTagColor(tagName);
     }
 
     getAllTagsWithUsage() {
@@ -1479,5 +1489,24 @@ class InsightApp {
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
-    new InsightApp();
+    try {
+        console.log('🚀 开始初始化 Insight App...');
+        const app = new InsightApp();
+        console.log('✅ Insight App 初始化成功！');
+        
+        // 将 app 实例暴露到全局，方便调试
+        window.insightApp = app;
+    } catch (error) {
+        console.error('❌ Insight App 初始化失败:', error);
+        alert('应用初始化失败，请刷新页面重试。\n\n错误: ' + error.message);
+    }
+});
+
+// 全局错误处理
+window.addEventListener('error', (event) => {
+    console.error('❌ 全局错误:', event.error);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('❌ 未处理的 Promise 错误:', event.reason);
 });
