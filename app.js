@@ -489,6 +489,7 @@ class InsightApp {
     // Search
     openSearchModal() {
         this.searchModal.classList.add('active');
+        document.body.classList.add('modal-open');
         this.searchInput.value = '';
         this.searchResults.innerHTML = '';
         setTimeout(() => this.searchInput.focus(), 100);
@@ -545,6 +546,7 @@ class InsightApp {
     // Stats
     openStatsModal() {
         this.statsModal.classList.add('active');
+        document.body.classList.add('modal-open');
         this.updateStats();
     }
 
@@ -630,6 +632,7 @@ class InsightApp {
         this.currentEditingId = id;
         this.editNoteInput.value = note.content;
         this.noteModal.classList.add('active');
+        document.body.classList.add('modal-open');
         setTimeout(() => this.editNoteInput.focus(), 100);
     }
 
@@ -660,6 +663,12 @@ class InsightApp {
 
     closeModal(modal) {
         modal.classList.remove('active');
+        document.body.classList.remove('modal-open');
+    }
+
+    openModal(modal) {
+        modal.classList.add('active');
+        document.body.classList.add('modal-open');
     }
 
     // Tags Bar (输入框下方显示所有标签)
@@ -991,6 +1000,7 @@ class InsightApp {
 
     openTagsModal() {
         this.tagsModal.classList.add('active');
+        document.body.classList.add('modal-open');
         this.renderCustomTagsList();
         this.renderUsedTagsList();
         setTimeout(() => this.newTagInput.focus(), 100);
@@ -1261,6 +1271,7 @@ class InsightApp {
     // Cloud Sync Methods
     openSyncModal() {
         this.syncModal.classList.add('active');
+        document.body.classList.add('modal-open');
         this.updateSyncUI();
     }
 
