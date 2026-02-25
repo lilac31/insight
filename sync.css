@@ -77,6 +77,31 @@
     gap: 12px; /* 减小间距 */
 }
 
+.sync-help {
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 8px 12px;
+    background: var(--bg-color);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+.sync-help summary {
+    font-weight: 500;
+    user-select: none;
+    cursor: pointer;
+    list-style: none;
+}
+
+.sync-help summary::-webkit-details-marker {
+    display: none;
+}
+
+.sync-help[open] summary {
+    margin-bottom: 8px;
+}
+
 .sync-tip {
     font-size: 13px;
     color: var(--text-secondary);
