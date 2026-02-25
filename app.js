@@ -5,6 +5,7 @@ class StorageManager {
         this.CUSTOM_TAGS_KEY = 'insight_custom_tags';
         this.DRAFT_KEY = 'insight_draft';
         this.BACKUP_KEY = 'insight_backup';
+        this.TAG_COLORS_KEY = 'insight_tag_colors';
     }
 
     getNotes() {
@@ -92,6 +93,31 @@ class StorageManager {
         const tags = this.getCustomTags();
         const filtered = tags.filter(tag => tag.id !== id);
         this.saveCustomTags(filtered);
+    }
+
+    // Tag Colors Management
+    getTagColors() {
+        const data = localStorage.getItem(this.TAG_COLORS_KEY);
+        return data ? JSON.parse(data) : {};
+    }
+
+    saveTagColor(tagName, colorIndex) {
+        const colors = this.getTagColors();
+        colors[tagName] = colorIndex;
+        localStorage.setItem(this.TAG_COLORS_KEY, JSON.stringify(colors));
+    }
+
+    getTagColor(tagName) {
+        const colors = this.getTagColors();
+        if (colors[tagName] !== undefined) {
+            return colors[tagName];
+        }
+        // 默认根据标签名生成颜色
+        let hash = 0;
+        for (let i = 0; i < tagName.length; i++) {
+            hash = tagName.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return Math.abs(hash) % 8;
     }
 
     // Draft Management (草稿自动保存)
@@ -426,7 +452,8 @@ class InsightApp {
 
     highlightTags(content) {
         return content.replace(/#[\u4e00-\u9fa5a-zA-Z0-9_]+/g, match => {
-            return `<span class="hashtag">${match}</span>`;
+            const colorIndex = this.getTagColor(match);
+            return `<span class="hashtag" data-color="${colorIndex}">${match}</span>`;
         });
     }
 
@@ -1032,17 +1059,24 @@ class InsightApp {
 
         this.customTagsList.innerHTML = customTags.map(tag => {
             const usageCount = this.notes.filter(note => note.tags.includes(tag.name)).length;
+            const colorIndex = this.getTagColor(tag.name);
             
             return `
                 <div class="tag-item" data-id="${tag.id}">
                     <div class="tag-item-left">
-                        <div class="tag-item-icon">🏷️</div>
+                        <div class="tag-item-icon" data-color="${colorIndex}">🏷️</div>
                         <div class="tag-item-info">
                             <div class="tag-item-name">${tag.name}</div>
                             <div class="tag-item-meta">${usageCount} 篇笔记使用</div>
                         </div>
                     </div>
                     <div class="tag-item-actions">
+                        <button class="tag-action-btn color-btn" data-tag="${tag.name}" title="修改颜色">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2"/>
+                                <circle cx="8" cy="8" r="3" fill="currentColor"/>
+                            </svg>
+                        </button>
                         <button class="tag-action-btn insert-btn" data-tag="${tag.name}" title="插入标签">
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                 <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -1059,6 +1093,13 @@ class InsightApp {
         }).join('');
 
         // Add event listeners
+        this.customTagsList.querySelectorAll('.color-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.showColorPicker(btn.dataset.tag);
+            });
+        });
+
         this.customTagsList.querySelectorAll('.insert-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -1072,6 +1113,39 @@ class InsightApp {
                 this.deleteCustomTag(btn.dataset.id);
             });
         });
+    }
+
+    showColorPicker(tagName) {
+        const colors = [
+            { name: '黄色', emoji: '🟨' },
+            { name: '蓝色', emoji: '🔵' },
+            { name: '粉色', emoji: '💗' },
+            { name: '绿色', emoji: '🟢' },
+            { name: '紫色', emoji: '🟣' },
+            { name: '橙色', emoji: '🟠' },
+            { name: '淡紫', emoji: '💜' },
+            { name: '青色', emoji: '🩵' }
+        ];
+
+        const colorOptions = colors.map((color, index) => `${color.emoji} ${color.name}`).join('\n');
+        const currentColor = this.getTagColor(tagName);
+        
+        const choice = prompt(
+            `选择 "${tagName}" 的颜色（输入 0-7）：\n\n${colorOptions}\n\n当前颜色: ${currentColor}`,
+            currentColor.toString()
+        );
+
+        if (choice !== null) {
+            const colorIndex = parseInt(choice);
+            if (colorIndex >= 0 && colorIndex <= 7) {
+                this.storage.saveTagColor(tagName, colorIndex);
+                this.renderCustomTagsList();
+                this.renderTagsBar();
+                this.renderNotes();
+            } else {
+                alert('请输入 0-7 之间的数字');
+            }
+        }
     }
 
     renderUsedTagsList() {

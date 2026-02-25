@@ -480,8 +480,51 @@ body {
 }
 
 .note-content .hashtag {
-    color: var(--primary-color);
     font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+/* Hashtag color variations - matching tag bar colors */
+.note-content .hashtag[data-color="0"] {
+    color: #92400e;
+    background: #fef3c7;
+}
+
+.note-content .hashtag[data-color="1"] {
+    color: #1e3a8a;
+    background: #dbeafe;
+}
+
+.note-content .hashtag[data-color="2"] {
+    color: #831843;
+    background: #fce7f3;
+}
+
+.note-content .hashtag[data-color="3"] {
+    color: #14532d;
+    background: #dcfce7;
+}
+
+.note-content .hashtag[data-color="4"] {
+    color: #312e81;
+    background: #e0e7ff;
+}
+
+.note-content .hashtag[data-color="5"] {
+    color: #7c2d12;
+    background: #ffedd5;
+}
+
+.note-content .hashtag[data-color="6"] {
+    color: #581c87;
+    background: #fae8ff;
+}
+
+.note-content .hashtag[data-color="7"] {
+    color: #164e63;
+    background: #cffafe;
 }
 
 /* Empty State */
@@ -844,6 +887,39 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 16px;
+}
+
+/* Tag item icon colors */
+.tag-item-icon[data-color="0"] {
+    background: #fef3c7;
+}
+
+.tag-item-icon[data-color="1"] {
+    background: #dbeafe;
+}
+
+.tag-item-icon[data-color="2"] {
+    background: #fce7f3;
+}
+
+.tag-item-icon[data-color="3"] {
+    background: #dcfce7;
+}
+
+.tag-item-icon[data-color="4"] {
+    background: #e0e7ff;
+}
+
+.tag-item-icon[data-color="5"] {
+    background: #ffedd5;
+}
+
+.tag-item-icon[data-color="6"] {
+    background: #fae8ff;
+}
+
+.tag-item-icon[data-color="7"] {
+    background: #cffafe;
 }
 
 .tag-item-info {
