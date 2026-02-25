@@ -155,6 +155,12 @@
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+    margin-top: 4px; /* 减少上边距 */
+}
+
+.sync-actions button {
+    flex: 1;
+    min-width: 120px; /* 确保按钮有最小宽度 */
 }
 
 .btn-secondary {
