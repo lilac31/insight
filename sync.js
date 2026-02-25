@@ -48,14 +48,18 @@ class CloudSyncManager {
         const response = await fetch(this.gistAPI, {
             method: 'POST',
             headers: {
-                'Authorization': `token ${token}`,
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github+json',
+                'X-GitHub-Api-Version': '2022-11-28',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(gistData)
         });
 
         if (!response.ok) {
-            throw new Error('创建 Gist 失败');
+            const errorData = await response.json().catch(() => ({}));
+            const errorMsg = errorData.message || `HTTP ${response.status}`;
+            throw new Error(`创建 Gist 失败: ${errorMsg}`);
         }
 
         const gist = await response.json();
@@ -85,7 +89,9 @@ class CloudSyncManager {
         const response = await fetch(`${this.gistAPI}/${gistId}`, {
             method: 'PATCH',
             headers: {
-                'Authorization': `token ${token}`,
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github+json',
+                'X-GitHub-Api-Version': '2022-11-28',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(gistData)
@@ -97,7 +103,9 @@ class CloudSyncManager {
                 localStorage.removeItem(this.GIST_ID_KEY);
                 return await this.createGist(data);
             }
-            throw new Error('更新 Gist 失败');
+            const errorData = await response.json().catch(() => ({}));
+            const errorMsg = errorData.message || `HTTP ${response.status}`;
+            throw new Error(`更新 Gist 失败: ${errorMsg}`);
         }
 
         return await response.json();
@@ -112,12 +120,16 @@ class CloudSyncManager {
 
         const response = await fetch(`${this.gistAPI}/${gistId}`, {
             headers: {
-                'Authorization': `token ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github+json',
+                'X-GitHub-Api-Version': '2022-11-28'
             }
         });
 
         if (!response.ok) {
-            throw new Error('获取 Gist 失败');
+            const errorData = await response.json().catch(() => ({}));
+            const errorMsg = errorData.message || `HTTP ${response.status}`;
+            throw new Error(`获取 Gist 失败: ${errorMsg}`);
         }
 
         const gist = await response.json();
