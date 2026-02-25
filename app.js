@@ -262,6 +262,8 @@ class InsightApp {
         this.githubToken = document.getElementById('githubToken');
         this.connectGithubBtn = document.getElementById('connectGithubBtn');
         this.githubConnected = document.getElementById('githubConnected');
+        this.gistIdDisplay = document.getElementById('gistIdDisplay');
+        this.copyGistIdBtn = document.getElementById('copyGistIdBtn');
         this.syncUpBtn = document.getElementById('syncUpBtn');
         this.syncDownBtn = document.getElementById('syncDownBtn');
         this.reconfigBtn = document.getElementById('reconfigBtn');
@@ -370,6 +372,10 @@ class InsightApp {
         this.syncDownBtn.addEventListener('click', () => this.handleSyncDown());
         this.reconfigBtn.addEventListener('click', () => this.reconfigureGitHub());
         this.disconnectBtn.addEventListener('click', () => this.disconnectGitHub());
+        
+        if (this.copyGistIdBtn) {
+            this.copyGistIdBtn.addEventListener('click', () => this.copyGistId());
+        }
         
         this.downloadBackupBtn.addEventListener('click', () => this.exportAllData());
         this.uploadBackupBtn.addEventListener('click', () => this.fileInput.click());
@@ -1388,6 +1394,12 @@ class InsightApp {
                 badge.classList.add('connected');
             }
             
+            // Display Gist ID
+            const gistId = localStorage.getItem('insight_gist_id');
+            if (this.gistIdDisplay && gistId) {
+                this.gistIdDisplay.textContent = gistId;
+            }
+            
             // Update last sync time
             const lastSync = this.cloudSync.getLastSyncTime();
             if (lastSync) {
@@ -1418,6 +1430,27 @@ class InsightApp {
                 storageInfo.style.display = 'none';
             }
         }
+    }
+
+    copyGistId() {
+        const gistId = localStorage.getItem('insight_gist_id');
+        if (!gistId) {
+            alert('没有找到 Gist ID');
+            return;
+        }
+        
+        // 复制到剪贴板
+        navigator.clipboard.writeText(gistId).then(() => {
+            // 临时修改按钮文字
+            const originalText = this.copyGistIdBtn.textContent;
+            this.copyGistIdBtn.textContent = '✅';
+            setTimeout(() => {
+                this.copyGistIdBtn.textContent = originalText;
+            }, 1500);
+        }).catch(() => {
+            // 降级方案:使用 prompt 显示
+            prompt('Gist ID (请手动复制):', gistId);
+        });
     }
 
     updateStorageInfo() {
@@ -1519,15 +1552,26 @@ class InsightApp {
     }
 
     reconfigureGitHub() {
-        const newToken = prompt('请输入新的 GitHub Token:\n\n旧 Token 将被替换');
+        const currentGistId = localStorage.getItem('insight_gist_id');
+        const hasGist = !!currentGistId;
+        
+        let message = '请输入新的 GitHub Token:';
+        if (hasGist) {
+            message += '\n\n提示: 新 Token 会继续使用当前的云端数据';
+        } else {
+            message += '\n\n提示: 输入后会自动创建新的云端备份';
+        }
+        
+        const newToken = prompt(message);
         
         if (!newToken || !newToken.trim()) {
             return;
         }
 
         const token = newToken.trim();
+        const oldToken = this.cloudSync.getToken();
         
-        // 保存 Gist ID，避免丢失
+        // 临时保存 Gist ID，避免丢失
         const gistId = localStorage.getItem('insight_gist_id');
         
         // 更新 Token
@@ -1537,23 +1581,54 @@ class InsightApp {
         this.syncUpBtn.disabled = true;
         this.syncUpBtn.textContent = '测试中...';
         
-        this.cloudSync.syncUp().then(result => {
-            if (result.success) {
-                alert('✅ Token 更换成功！');
-                this.updateSyncUI();
-            } else {
-                alert('❌ 新 Token 无效: ' + result.message + '\n\n已恢复旧 Token。');
-                // 如果新 Token 失败，恢复旧状态
+        // 如果有 Gist ID,先测试能否访问
+        if (gistId) {
+            // 尝试读取现有 Gist 来验证权限
+            this.cloudSync.getGist().then(() => {
+                // 能读取,说明 Token 有效
+                return this.cloudSync.syncUp();
+            }).then(result => {
+                if (result.success) {
+                    alert('✅ Token 更换成功!\n\n继续使用现有云端数据。');
+                    this.updateSyncUI();
+                } else {
+                    throw new Error(result.message);
+                }
+            }).catch(error => {
+                alert('❌ Token 无法访问现有云端数据: ' + error.message + '\n\n可能原因:\n1. Token 权限不足(需要 gist 权限)\n2. Token 所属账号不同\n\n已恢复旧设置。');
+                // 恢复旧 Token 和 Gist ID
+                if (oldToken) {
+                    this.cloudSync.saveToken(oldToken);
+                }
                 if (gistId) {
                     localStorage.setItem('insight_gist_id', gistId);
                 }
-            }
-        }).catch(error => {
-            alert('❌ Token 测试失败: ' + error.message);
-        }).finally(() => {
-            this.syncUpBtn.disabled = false;
-            this.syncUpBtn.textContent = '⬆️ 上传到云端';
-        });
+            }).finally(() => {
+                this.syncUpBtn.disabled = false;
+                this.syncUpBtn.textContent = '⬆️ 上传到云端';
+            });
+        } else {
+            // 没有 Gist ID,直接创建新的
+            this.cloudSync.syncUp().then(result => {
+                if (result.success) {
+                    alert('✅ Token 验证成功!\n\n已创建新的云端备份。');
+                    this.updateSyncUI();
+                } else {
+                    throw new Error(result.message);
+                }
+            }).catch(error => {
+                alert('❌ Token 无效: ' + error.message + '\n\n请检查:\n1. Token 是否正确\n2. 是否勾选了 gist 权限');
+                // 恢复旧 Token
+                if (oldToken) {
+                    this.cloudSync.saveToken(oldToken);
+                } else {
+                    this.cloudSync.clearToken();
+                }
+            }).finally(() => {
+                this.syncUpBtn.disabled = false;
+                this.syncUpBtn.textContent = '⬆️ 上传到云端';
+            });
+        }
     }
 
     disconnectGitHub() {

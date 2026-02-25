@@ -291,6 +291,14 @@
                             </div>
                             <div class="sync-connected" id="githubConnected" style="display: none;">
                                 <p class="sync-success">✅ 已连接到 GitHub Gist</p>
+                                <div class="sync-info">
+                                    <p class="sync-gist-id">
+                                        <strong>Gist ID:</strong> 
+                                        <code id="gistIdDisplay">-</code>
+                                        <button class="btn-copy" id="copyGistIdBtn" title="复制 Gist ID">📋</button>
+                                    </p>
+                                    <p class="sync-hint-small">💡 在其他设备上输入相同的 Token 即可同步此 Gist</p>
+                                </div>
                                 <div class="sync-actions">
                                     <button class="btn-primary" id="syncUpBtn">⬆️ 上传到云端</button>
                                     <button class="btn-secondary" id="syncDownBtn">⬇️ 从云端下载</button>
