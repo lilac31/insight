@@ -1,0 +1,231 @@
+/* Sync Modal Styles */
+.sync-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.sync-status {
+    background: var(--bg-color);
+    padding: 20px;
+    border-radius: var(--radius-md);
+    text-align: center;
+}
+
+.sync-status-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.sync-status-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.sync-status-time {
+    font-size: 13px;
+    color: var(--text-tertiary);
+}
+
+.sync-status.connected .sync-status-icon {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.sync-method {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.sync-method-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-color);
+}
+
+.sync-method-icon {
+    font-size: 32px;
+}
+
+.sync-method-info h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.sync-method-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.sync-method-content {
+    padding: 16px;
+}
+
+.sync-setup {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sync-tip {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.sync-steps {
+    font-size: 14px;
+    line-height: 1.8;
+    margin: 0;
+    padding-left: 20px;
+    color: var(--text-primary);
+}
+
+.sync-steps code {
+    background: var(--bg-color);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--primary-color);
+}
+
+.sync-steps a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.sync-steps a:hover {
+    text-decoration: underline;
+}
+
+.sync-input-group {
+    display: flex;
+    gap: 8px;
+}
+
+.sync-input {
+    flex: 1;
+    border: 2px solid var(--border-color);
+    outline: none;
+    font-size: 14px;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: 'Courier New', monospace;
+    transition: border-color 0.2s;
+}
+
+.sync-input:focus {
+    border-color: var(--primary-color);
+}
+
+.sync-connected {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sync-success {
+    font-size: 14px;
+    color: #10b981;
+    margin: 0;
+    font-weight: 500;
+}
+
+.sync-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-secondary {
+    background: var(--bg-color);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-secondary:active {
+    background: var(--border-color);
+    transform: scale(0.97);
+}
+
+.sync-hint {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    margin: 0;
+}
+
+.sync-settings {
+    background: var(--bg-color);
+    padding: 16px;
+    border-radius: var(--radius-md);
+}
+
+.sync-settings h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.sync-setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sync-setting-item:last-child {
+    border-bottom: none;
+}
+
+.sync-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.sync-checkbox input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.sync-select {
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    cursor: pointer;
+}

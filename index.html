@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Insight - 你的思考笔记</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="sync.css">
+</head>
+<body>
+    <div class="app">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">💡 Insight</h1>
+                <div class="header-actions">
+                    <button class="icon-btn" id="syncBtn" title="云端同步">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M13 8C14.1046 8 15 8.89543 15 10C15 11.1046 14.1046 12 13 12H7C5.89543 12 5 11.1046 5 10C5 8.89543 5.89543 8 7 8" stroke="currentColor" stroke-width="2"/>
+                            <path d="M10 3V10M10 3L7 6M10 3L13 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M10 17V10M10 17L13 14M10 17L7 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                    <button class="icon-btn" id="exportBtn" title="导出数据">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M10 3V12M10 3L7 6M10 3L13 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M3 12V15C3 16.1046 3.89543 17 5 17H15C16.1046 17 17 16.1046 17 15V12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                    <button class="icon-btn" id="tagsBtn" title="标签管理">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M3 8L8 3L17 12L12 17L3 8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                            <circle cx="10" cy="6" r="1" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    <button class="icon-btn" id="searchBtn" title="搜索">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="2"/>
+                            <path d="M14 14L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                    <button class="icon-btn" id="statsBtn" title="统计">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M3 17V11M10 17V7M17 17V3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 输入区域 -->
+            <div class="input-section">
+                <div class="input-wrapper">
+                    <div class="input-container">
+                        <textarea 
+                            id="noteInput" 
+                            class="note-input" 
+                            placeholder="记录想法... 输入 # 快速选择标签"
+                            rows="3"
+                        ></textarea>
+                    </div>
+                    
+                    <!-- 标签栏 -->
+                    <div class="tags-bar">
+                        <div class="tags-bar-list" id="tagsBarList">
+                            <div class="tags-bar-empty">暂无标签，点击右上角标签图标创建</div>
+                        </div>
+                        <button class="btn-primary" id="saveBtn">保存</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 标签下拉菜单（输入#时显示） -->
+            <div class="tag-dropdown" id="tagDropdown" style="display: none;">
+                <div class="tag-dropdown-list" id="tagDropdownList"></div>
+            </div>
+
+            <!-- 标签筛选 -->
+            <div class="tags-filter" id="tagsFilter">
+                <button class="tag-chip active" data-tag="all">
+                    全部 <span class="tag-count" id="allCount">0</span>
+                </button>
+            </div>
+
+            <!-- 笔记列表 -->
+            <div class="notes-list" id="notesList">
+                <div class="empty-state">
+                    <div class="empty-icon">📝</div>
+                    <p>还没有笔记</p>
+                    <p class="empty-hint">开始记录你的第一个想法吧</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- 搜索弹窗 -->
+        <div class="modal" id="searchModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        class="search-input" 
+                        placeholder="搜索笔记内容..."
+                        autocomplete="off"
+                    >
+                    <button class="icon-btn" id="closeSearchBtn">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="search-results" id="searchResults"></div>
+            </div>
+        </div>
+
+        <!-- 统计弹窗 -->
+        <div class="modal" id="statsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>记录统计</h2>
+                    <button class="icon-btn" id="closeStatsBtn">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalNotes">0</div>
+                            <div class="stat-label">总笔记数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalTags">0</div>
+                            <div class="stat-label">标签数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="todayNotes">0</div>
+                            <div class="stat-label">今日记录</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="streak">0</div>
+                            <div class="stat-label">连续天数</div>
+                        </div>
+                    </div>
+                    <div class="heatmap-section">
+                        <h3>记录热力图</h3>
+                        <div class="heatmap" id="heatmap"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 笔记详情/编辑弹窗 -->
+        <div class="modal" id="noteModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>编辑笔记</h2>
+                    <button class="icon-btn" id="closeNoteBtn">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="note-edit-content">
+                    <textarea 
+                        id="editNoteInput" 
+                        class="note-input edit-input" 
+                        rows="8"
+                    ></textarea>
+                    <div class="note-actions">
+                        <button class="btn-danger" id="deleteBtn">删除</button>
+                        <button class="btn-primary" id="updateBtn">更新</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 标签管理弹窗 -->
+        <div class="modal" id="tagsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>标签管理</h2>
+                    <button class="icon-btn" id="closeTagsBtn">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="tags-manage-content">
+                    <!-- 新建标签输入 -->
+                    <div class="tag-input-section">
+                        <div class="tag-input-wrapper">
+                            <input 
+                                type="text" 
+                                id="newTagInput" 
+                                class="tag-input" 
+                                placeholder="输入标签名（自动添加 # 前缀）"
+                                autocomplete="off"
+                            >
+                            <button class="btn-primary btn-add-tag" id="addTagBtn">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="tag-hint">💡 提示：自定义标签可在写笔记时快速选择</p>
+                    </div>
+
+                    <!-- 标签列表 -->
+                    <div class="tags-list-section">
+                        <div class="tags-list-header">
+                            <h3>我的标签</h3>
+                            <span class="tags-count" id="customTagsCount">0</span>
+                        </div>
+                        <div class="custom-tags-list" id="customTagsList">
+                            <div class="empty-state-small">
+                                <p>还没有自定义标签</p>
+                                <p class="empty-hint">创建标签后可以快速分类笔记</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 已使用标签（从笔记中提取） -->
+                    <div class="tags-list-section">
+                        <div class="tags-list-header">
+                            <h3>已使用的标签</h3>
+                            <span class="tags-count" id="usedTagsCount">0</span>
+                        </div>
+                        <div class="used-tags-list" id="usedTagsList">
+                            <div class="empty-state-small">
+                                <p>还没有使用任何标签</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 云端同步弹窗 -->
+        <div class="modal" id="syncModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>☁️ 云端同步</h2>
+                    <button class="icon-btn" id="closeSyncBtn">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="sync-content">
+                    <!-- 同步状态 -->
+                    <div class="sync-status" id="syncStatus">
+                        <div class="sync-status-icon">☁️</div>
+                        <div class="sync-status-text">未连接云端</div>
+                        <div class="sync-status-time" id="lastSyncTime"></div>
+                    </div>
+
+                    <!-- GitHub 同步 -->
+                    <div class="sync-method">
+                        <div class="sync-method-header">
+                            <div class="sync-method-icon">🔗</div>
+                            <div class="sync-method-info">
+                                <h3>GitHub Gist 同步</h3>
+                                <p class="sync-method-desc">免费、私密、可靠的云端存储</p>
+                            </div>
+                        </div>
+                        <div class="sync-method-content" id="githubSyncContent">
+                            <div class="sync-setup">
+                                <p class="sync-tip">💡 使用 GitHub Gist 作为私密云端存储</p>
+                                <ol class="sync-steps">
+                                    <li>访问 <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings → Developer settings → Tokens</a></li>
+                                    <li>创建 Personal Access Token，勾选 <code>gist</code> 权限</li>
+                                    <li>复制 Token 并粘贴到下方输入框</li>
+                                </ol>
+                                <div class="sync-input-group">
+                                    <input 
+                                        type="password" 
+                                        id="githubToken" 
+                                        class="sync-input" 
+                                        placeholder="粘贴 GitHub Token"
+                                        autocomplete="off"
+                                    >
+                                    <button class="btn-primary" id="connectGithubBtn">连接</button>
+                                </div>
+                            </div>
+                            <div class="sync-connected" id="githubConnected" style="display: none;">
+                                <p class="sync-success">✅ 已连接到 GitHub Gist</p>
+                                <div class="sync-actions">
+                                    <button class="btn-primary" id="syncUpBtn">⬆️ 上传到云端</button>
+                                    <button class="btn-secondary" id="syncDownBtn">⬇️ 从云端下载</button>
+                                    <button class="btn-danger" id="disconnectGithubBtn">断开连接</button>
+                                </div>
+                                <p class="sync-hint">💾 上次同步: <span id="lastSyncTimeText">从未</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 本地备份 -->
+                    <div class="sync-method">
+                        <div class="sync-method-header">
+                            <div class="sync-method-icon">💾</div>
+                            <div class="sync-method-info">
+                                <h3>本地备份</h3>
+                                <p class="sync-method-desc">下载到本地，手动上传云盘</p>
+                            </div>
+                        </div>
+                        <div class="sync-method-content">
+                            <div class="sync-actions">
+                                <button class="btn-primary" id="downloadBackupBtn">📥 下载备份文件</button>
+                                <button class="btn-secondary" id="uploadBackupBtn">📤 导入备份文件</button>
+                            </div>
+                            <input type="file" id="fileInput" accept=".json" style="display: none;">
+                            <p class="sync-hint">💡 可将备份文件保存到网盘、邮箱等</p>
+                        </div>
+                    </div>
+
+                    <!-- 自动同步设置 -->
+                    <div class="sync-settings" id="syncSettings" style="display: none;">
+                        <h3>⚙️ 自动同步设置</h3>
+                        <div class="sync-setting-item">
+                            <label class="sync-checkbox">
+                                <input type="checkbox" id="autoSyncEnabled">
+                                <span>启用自动同步</span>
+                            </label>
+                        </div>
+                        <div class="sync-setting-item">
+                            <label>同步间隔</label>
+                            <select id="syncInterval" class="sync-select">
+                                <option value="5">每 5 分钟</option>
+                                <option value="10">每 10 分钟</option>
+                                <option value="30">每 30 分钟</option>
+                                <option value="60">每 1 小时</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="sync.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
