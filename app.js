@@ -207,6 +207,7 @@ class InsightApp {
         this.restoreDraft();
         this.initAutoSave();
         this.initBeforeUnload();
+        this.updateSyncUI(); // 初始化同步界面
         this.cloudSync.startAutoSync();
     }
 
