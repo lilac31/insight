@@ -1,4 +1,4 @@
-// Cloud Sync Manager - GitHub Gist
+// Cloud Sync Manager - GitHub Gist with Sharding Support
 class CloudSyncManager {
     constructor(storage) {
         this.storage = storage;
@@ -10,6 +10,10 @@ class CloudSyncManager {
         
         this.gistAPI = 'https://api.github.com/gists';
         this.autoSyncTimer = null;
+        
+        // 分片配置
+        this.MAX_SHARD_SIZE = 800 * 1024; // 800KB per shard (留buffer)
+        this.SHARD_PREFIX = 'insight-shard-';
     }
 
     // GitHub Token Management
@@ -30,19 +34,128 @@ class CloudSyncManager {
         return !!this.getToken();
     }
 
-    // Gist Management
+    // 分片管理
+    shardNotes(notes) {
+        // 按时间排序(最新的在前)
+        const sortedNotes = [...notes].sort((a, b) => b.timestamp - a.timestamp);
+        
+        const shards = [];
+        let currentShard = [];
+        let currentSize = 0;
+        
+        // 基础结构大小估算
+        const baseSize = new Blob([JSON.stringify({
+            customTags: this.storage.getCustomTags(),
+            tagColors: this.storage.getTagColors(),
+            syncTime: new Date().toISOString(),
+            version: '1.0',
+            shardInfo: { index: 0, total: 1 },
+            notes: []
+        })]).size;
+        
+        for (const note of sortedNotes) {
+            const noteSize = new Blob([JSON.stringify(note)]).size;
+            
+            // 如果加入这条笔记会超过限制,开始新分片
+            if (currentSize + noteSize + baseSize > this.MAX_SHARD_SIZE && currentShard.length > 0) {
+                shards.push(currentShard);
+                currentShard = [note];
+                currentSize = noteSize;
+            } else {
+                currentShard.push(note);
+                currentSize += noteSize;
+            }
+        }
+        
+        // 添加最后一个分片
+        if (currentShard.length > 0) {
+            shards.push(currentShard);
+        }
+        
+        return shards.length > 0 ? shards : [[]];
+    }
+    
+    mergeShards(shardDataArray) {
+        // 合并所有分片的笔记
+        const allNotes = [];
+        let customTags = [];
+        let tagColors = {};
+        let latestSyncTime = null;
+        
+        for (const shardData of shardDataArray) {
+            if (shardData.notes) {
+                allNotes.push(...shardData.notes);
+            }
+            
+            // 使用最新的标签和颜色配置
+            if (shardData.customTags) {
+                customTags = shardData.customTags;
+            }
+            if (shardData.tagColors) {
+                tagColors = shardData.tagColors;
+            }
+            
+            // 记录最新的同步时间
+            if (shardData.syncTime) {
+                if (!latestSyncTime || shardData.syncTime > latestSyncTime) {
+                    latestSyncTime = shardData.syncTime;
+                }
+            }
+        }
+        
+        // 去重(根据ID)
+        const uniqueNotes = [];
+        const seenIds = new Set();
+        for (const note of allNotes) {
+            if (!seenIds.has(note.id)) {
+                seenIds.add(note.id);
+                uniqueNotes.push(note);
+            }
+        }
+        
+        return {
+            notes: uniqueNotes,
+            customTags,
+            tagColors,
+            syncTime: latestSyncTime,
+            version: '1.0'
+        };
+    }
+
+    // Gist Management with Sharding
     async createGist(data) {
         const token = this.getToken();
         if (!token) throw new Error('未连接 GitHub');
 
-        const gistData = {
-            description: 'Insight 笔记备份 - 自动同步',
-            public: false,
-            files: {
-                'insight-notes.json': {
-                    content: JSON.stringify(data, null, 2)
+        const notes = data.notes || [];
+        const shards = this.shardNotes(notes);
+        
+        console.log(`📦 创建 Gist: ${shards.length} 个分片, ${notes.length} 条笔记`);
+        
+        // 准备文件对象
+        const files = {};
+        for (let i = 0; i < shards.length; i++) {
+            const shardData = {
+                notes: shards[i],
+                customTags: data.customTags || [],
+                tagColors: data.tagColors || {},
+                syncTime: data.syncTime || new Date().toISOString(),
+                version: data.version || '1.0',
+                shardInfo: {
+                    index: i,
+                    total: shards.length
                 }
-            }
+            };
+            
+            files[`${this.SHARD_PREFIX}${i}.json`] = {
+                content: JSON.stringify(shardData, null, 2)
+            };
+        }
+
+        const gistData = {
+            description: `Insight 笔记备份 - ${shards.length} 个分片`,
+            public: false,
+            files
         };
 
         const response = await fetch(this.gistAPI, {
@@ -78,12 +191,57 @@ class CloudSyncManager {
             return await this.createGist(data);
         }
 
-        const gistData = {
-            files: {
-                'insight-notes.json': {
-                    content: JSON.stringify(data, null, 2)
+        const notes = data.notes || [];
+        const shards = this.shardNotes(notes);
+        
+        console.log(`📦 更新 Gist: ${shards.length} 个分片, ${notes.length} 条笔记`);
+        
+        // 准备文件对象
+        const files = {};
+        for (let i = 0; i < shards.length; i++) {
+            const shardData = {
+                notes: shards[i],
+                customTags: data.customTags || [],
+                tagColors: data.tagColors || {},
+                syncTime: data.syncTime || new Date().toISOString(),
+                version: data.version || '1.0',
+                shardInfo: {
+                    index: i,
+                    total: shards.length
+                }
+            };
+            
+            files[`${this.SHARD_PREFIX}${i}.json`] = {
+                content: JSON.stringify(shardData, null, 2)
+            };
+        }
+        
+        // 获取现有 Gist 以删除多余的旧分片
+        try {
+            const existingGist = await fetch(`${this.gistAPI}/${gistId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2022-11-28'
+                }
+            });
+            
+            if (existingGist.ok) {
+                const gistData = await existingGist.json();
+                // 标记旧分片为null以删除
+                for (const filename in gistData.files) {
+                    if (filename.startsWith(this.SHARD_PREFIX) && !files[filename]) {
+                        files[filename] = null;
+                    }
                 }
             }
+        } catch (e) {
+            console.warn('无法获取现有分片信息:', e);
+        }
+
+        const gistData = {
+            description: `Insight 笔记备份 - ${shards.length} 个分片`,
+            files
         };
 
         const response = await fetch(`${this.gistAPI}/${gistId}`, {
@@ -133,10 +291,40 @@ class CloudSyncManager {
         }
 
         const gist = await response.json();
-        const file = gist.files['insight-notes.json'];
-        if (!file) throw new Error('备份文件不存在');
-
-        return JSON.parse(file.content);
+        
+        // 查找所有分片文件
+        const shardFiles = [];
+        for (const filename in gist.files) {
+            if (filename.startsWith(this.SHARD_PREFIX)) {
+                const file = gist.files[filename];
+                if (file && file.content) {
+                    try {
+                        const shardData = JSON.parse(file.content);
+                        shardFiles.push({
+                            index: shardData.shardInfo?.index || 0,
+                            data: shardData
+                        });
+                    } catch (e) {
+                        console.error(`解析分片 ${filename} 失败:`, e);
+                    }
+                }
+            }
+        }
+        
+        if (shardFiles.length === 0) {
+            // 兼容旧格式(单文件)
+            const file = gist.files['insight-notes.json'];
+            if (!file) throw new Error('备份文件不存在');
+            return JSON.parse(file.content);
+        }
+        
+        // 按索引排序
+        shardFiles.sort((a, b) => a.index - b.index);
+        
+        console.log(`📦 从 ${shardFiles.length} 个分片恢复数据`);
+        
+        // 合并分片
+        return this.mergeShards(shardFiles.map(f => f.data));
     }
 
     // Sync Operations
@@ -151,48 +339,25 @@ class CloudSyncManager {
             };
 
             // 检查数据大小
-            const dataStr = JSON.stringify(data, null, 2);
+            const dataStr = JSON.stringify(data);
             const sizeInBytes = new Blob([dataStr]).size;
             const sizeInKB = (sizeInBytes / 1024).toFixed(2);
             const sizeInMB = (sizeInBytes / (1024 * 1024)).toFixed(2);
             
-            console.log(`📊 数据大小: ${sizeInKB} KB (${sizeInMB} MB)`);
-            
-            // 存储大小警告阈值
-            const WARNING_SIZE = 800 * 1024; // 800 KB
-            const MAX_SIZE = 1024 * 1024; // 1 MB
-            
-            if (sizeInBytes >= MAX_SIZE) {
-                return { 
-                    success: false, 
-                    message: `数据大小 (${sizeInMB} MB) 超过 GitHub Gist 限制 (1 MB)！\n\n请导出本地备份并清理旧数据。`,
-                    size: sizeInBytes,
-                    warning: 'critical'
-                };
-            }
-            
-            if (sizeInBytes >= WARNING_SIZE) {
-                const percentage = ((sizeInBytes / MAX_SIZE) * 100).toFixed(0);
-                const message = `⚠️ 容量警告\n\n当前数据: ${sizeInKB} KB\n已使用: ${percentage}%\n\n建议尽快导出备份并清理数据，避免超过 1 MB 限制。`;
-                
-                // 记录警告时间，避免频繁提示
-                const lastWarning = localStorage.getItem('insight_size_warning');
-                const now = Date.now();
-                
-                if (!lastWarning || (now - parseInt(lastWarning)) > 24 * 60 * 60 * 1000) {
-                    // 24小时内只提示一次
-                    localStorage.setItem('insight_size_warning', now.toString());
-                    setTimeout(() => alert(message), 500); // 延迟显示，避免阻塞上传
-                }
-            }
+            console.log(`📊 数据大小: ${sizeInKB} KB (${sizeInMB} MB), ${data.notes.length} 条笔记`);
 
             await this.updateGist(data);
             this.updateLastSyncTime();
             
+            // 计算分片数量
+            const shards = this.shardNotes(data.notes);
+            const shardInfo = shards.length > 1 ? ` (${shards.length} 个分片)` : '';
+            
             return { 
                 success: true, 
-                message: '上传成功！',
-                size: sizeInBytes
+                message: `上传成功！${shardInfo}`,
+                size: sizeInBytes,
+                shards: shards.length
             };
         } catch (error) {
             console.error('同步上传失败:', error);
