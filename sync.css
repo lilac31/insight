@@ -108,6 +108,14 @@
     margin: 0;
 }
 
+.sync-tip-note {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin: 8px 0 0 0;
+    line-height: 1.4;
+    text-align: center;
+}
+
 .sync-steps {
     font-size: 13px;
     line-height: 1.6; /* 减小行高 */
