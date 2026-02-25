@@ -39,15 +39,16 @@
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    overflow: hidden; /* 保持圆角效果 */
+    overflow: visible; /* 允许内容显示 */
 }
 
 .sync-method-header {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 16px 16px 8px 16px; /* 减少底部内边距 */
+    padding: 16px 16px 8px 16px;
     background: var(--bg-color);
+    border-radius: var(--radius-md) var(--radius-md) 0 0; /* 上圆角 */
 }
 
 .sync-method-icon {
