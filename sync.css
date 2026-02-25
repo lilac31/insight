@@ -1,15 +1,19 @@
 /* Sync Modal Styles */
 .sync-content {
-    flex: 1;
     overflow-y: auto;
-    overflow-x: hidden; /* 防止横向滚动 */
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-y; /* 明确允许垂直滚动 */
     padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    min-height: 0; /* 关键：允许内容收缩和滚动 */
+    max-height: calc(85vh - 80px); /* 85vh 减去 header 高度 */
+    height: auto;
+}
+
+.sync-content > * {
+    margin-bottom: 16px;
+}
+
+.sync-content > *:last-child {
+    margin-bottom: 0;
 }
 
 /* 同步状态徽章 - 放在标题旁边 */
