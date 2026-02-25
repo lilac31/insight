@@ -1392,11 +1392,18 @@ class InsightApp {
 
     updateSyncUI() {
         const isConnected = this.cloudSync.isConnected();
+        const badge = document.getElementById('syncStatusBadge');
         
         if (isConnected) {
             document.getElementById('webdavSyncContent').querySelector('.sync-setup').style.display = 'none';
             this.webdavConnected.style.display = 'block';
             this.syncSettings.style.display = 'block';
+            
+            // Update badge
+            if (badge) {
+                badge.textContent = '已连接';
+                badge.classList.add('connected');
+            }
             
             // Update last sync time
             const lastSync = this.cloudSync.getLastSyncTime();
@@ -1411,27 +1418,22 @@ class InsightApp {
             
             // Update storage info
             this.updateStorageInfo();
-            
-            // Update status
-            document.getElementById('syncStatus').classList.add('connected');
-            document.querySelector('.sync-status-text').textContent = '已连接云端';
-            if (lastSync) {
-                document.getElementById('lastSyncTime').textContent = '上次同步: ' + this.formatTime(lastSync);
-            }
         } else {
             document.getElementById('webdavSyncContent').querySelector('.sync-setup').style.display = 'block';
             this.webdavConnected.style.display = 'none';
             this.syncSettings.style.display = 'none';
+            
+            // Update badge
+            if (badge) {
+                badge.textContent = '未连接';
+                badge.classList.remove('connected');
+            }
             
             // Hide storage info when disconnected
             const storageInfo = document.getElementById('storageInfo');
             if (storageInfo) {
                 storageInfo.style.display = 'none';
             }
-            
-            document.getElementById('syncStatus').classList.remove('connected');
-            document.querySelector('.sync-status-text').textContent = '未连接云端';
-            document.getElementById('lastSyncTime').textContent = '';
         }
     }
 

@@ -8,43 +8,30 @@
     flex-direction: column;
     gap: 16px;
     min-height: 0; /* 关键：允许内容收缩 */
+    max-height: calc(80vh - 70px); /* 确保有最大高度 */
 }
 
-.sync-status {
-    background: var(--bg-color);
-    padding: 12px 16px;
-    border-radius: var(--radius-sm);
-    text-align: center;
-}
-
-.sync-status-icon {
-    font-size: 32px;
-    margin-bottom: 6px;
-}
-
-.sync-status-text {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 2px;
-}
-
-.sync-status-time {
+/* 同步状态徽章 - 放在标题旁边 */
+.sync-status-badge {
+    display: inline-block;
     font-size: 12px;
-    color: var(--text-tertiary);
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 12px;
+    margin-left: 10px;
+    background: #f3f4f6;
+    color: #6b7280;
 }
 
-.sync-status.connected .sync-status-icon {
-    animation: pulse 2s ease-in-out infinite;
+.sync-status-badge.connected {
+    background: #d1fae5;
+    color: #065f46;
 }
 
-@keyframes pulse {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.1);
-    }
+.modal-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .sync-method {
