@@ -2,7 +2,9 @@
 .sync-content {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden; /* 防止横向滚动 */
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y; /* 明确允许垂直滚动 */
     padding: 16px;
     display: flex;
     flex-direction: column;
