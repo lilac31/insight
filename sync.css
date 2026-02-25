@@ -2,10 +2,12 @@
 .sync-content {
     flex: 1;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 20px;
+    min-height: 0; /* 关键：允许内容收缩 */
 }
 
 .sync-status {
@@ -228,4 +230,55 @@
     background: var(--card-bg);
     color: var(--text-primary);
     cursor: pointer;
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+    .sync-content {
+        padding: 16px;
+        gap: 16px;
+    }
+    
+    .sync-status {
+        padding: 16px;
+    }
+    
+    .sync-status-icon {
+        font-size: 36px;
+        margin-bottom: 8px;
+    }
+    
+    .sync-method-header {
+        padding: 12px;
+    }
+    
+    .sync-method-icon {
+        font-size: 28px;
+    }
+    
+    .sync-method-content {
+        padding: 12px;
+    }
+    
+    .sync-steps {
+        font-size: 13px;
+        padding-left: 18px;
+    }
+    
+    .sync-input-group {
+        flex-direction: column;
+    }
+    
+    .sync-input {
+        width: 100%;
+        font-size: 15px; /* 防止 iOS 自动缩放 */
+    }
+    
+    .sync-actions {
+        flex-direction: column;
+    }
+    
+    .sync-actions button {
+        width: 100%;
+    }
 }

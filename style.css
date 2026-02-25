@@ -591,6 +591,7 @@ body {
     align-items: center;
     padding: 20px;
     border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0; /* 防止头部被压缩 */
 }
 
 .modal-header h2 {
