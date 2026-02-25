@@ -171,12 +171,12 @@ body {
 .tag-bar-item {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
+    gap: 4px;
+    padding: 4px 10px;
     background: var(--bg-color);
     border: 1.5px solid;
-    border-radius: 20px;
-    font-size: 13px;
+    border-radius: 16px;
+    font-size: 12px;
     transition: all 0.2s;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
@@ -243,27 +243,12 @@ body {
 }
 
 .tag-bar-item-count {
-    font-size: 11px;
-    opacity: 0.7;
+    font-size: 10px;
+    opacity: 0.6;
 }
 
 .tag-bar-delete {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    margin-left: 2px;
-    cursor: pointer;
-    color: currentColor;
-    opacity: 0.6;
-    transition: opacity 0.2s;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.tag-bar-delete:hover,
-.tag-bar-delete:active {
-    opacity: 1;
+    display: none; /* 隐藏删除按钮，只在标签管理中删除 */
 }
 
 /* Tag Dropdown (输入#时显示) */
