@@ -258,63 +258,46 @@
                 </div>
                 <div class="sync-content">
 
-                    <!-- 坚果云 WebDAV 同步 -->
+                    <!-- GitHub Gist 同步 -->
                     <div class="sync-method">
                         <div class="sync-method-header">
-                            <div class="sync-method-icon">☁️</div>
+                            <div class="sync-method-icon">🔗</div>
                             <div class="sync-method-info">
-                                <h3>坚果云 WebDAV 同步</h3>
-                                <p class="sync-method-desc">1GB 免费空间，国内访问快</p>
+                                <h3>GitHub Gist 同步</h3>
+                                <p class="sync-method-desc">私密 Gist，稳定可靠，完全免费</p>
                             </div>
                         </div>
-                        <div class="sync-method-content" id="webdavSyncContent">
+                        <div class="sync-method-content" id="githubSyncContent">
                             <div class="sync-setup">
                                 <details class="sync-help">
-                                    <summary>📖 如何配置坚果云 WebDAV？</summary>
+                                    <summary>📖 如何获取 GitHub Token？</summary>
                                     <ol class="sync-steps">
-                                        <li>访问 <a href="https://www.jianguoyun.com/d/account#security" target="_blank">坚果云 → 账户信息 → 安全选项</a></li>
-                                        <li>在"第三方应用管理"中，添加应用密码</li>
-                                        <li>填写下方配置信息</li>
+                                        <li>访问 <a href="https://github.com/settings/tokens/new" target="_blank">GitHub → Settings → Developer settings → Personal access tokens</a></li>
+                                        <li>点击 "Generate new token (classic)"</li>
+                                        <li>勾选 <code>gist</code> 权限</li>
+                                        <li>生成并复制 Token</li>
                                     </ol>
                                 </details>
-                                <form class="sync-input-group webdav-form" onsubmit="return false;">
-                                    <input 
-                                        type="text" 
-                                        id="webdavServer" 
-                                        class="sync-input" 
-                                        placeholder="服务器地址 (如: dav.jianguoyun.com/dav/)"
-                                        autocomplete="off"
-                                        value="dav.jianguoyun.com/dav/"
-                                    >
-                                    <input 
-                                        type="text" 
-                                        id="webdavUsername" 
-                                        class="sync-input" 
-                                        placeholder="账号 (邮箱)"
-                                        autocomplete="off"
-                                    >
+                                <form class="sync-input-group" onsubmit="return false;">
                                     <input 
                                         type="password" 
-                                        id="webdavPassword" 
+                                        id="githubToken" 
                                         class="sync-input" 
-                                        placeholder="应用密码 (不是登录密码)"
+                                        placeholder="粘贴 GitHub Personal Access Token"
                                         autocomplete="off"
                                     >
-                                    <div class="sync-actions">
-                                        <button type="button" class="btn-secondary" id="testWebdavBtn">🔌 测试连接</button>
-                                        <button type="button" class="btn-primary" id="connectWebdavBtn">💾 保存并连接</button>
-                                    </div>
+                                    <button type="button" class="btn-primary" id="connectGithubBtn">💾 保存并连接</button>
                                 </form>
                             </div>
-                            <div class="sync-connected" id="webdavConnected" style="display: none;">
-                                <p class="sync-success">✅ 已连接到坚果云 WebDAV</p>
+                            <div class="sync-connected" id="githubConnected" style="display: none;">
+                                <p class="sync-success">✅ 已连接到 GitHub Gist</p>
                                 <div class="sync-actions">
-                                    <button class="btn-primary" id="webdavSyncUpBtn">⬆️ 上传到云端</button>
-                                    <button class="btn-secondary" id="webdavSyncDownBtn">⬇️ 从云端下载</button>
-                                    <button class="btn-secondary" id="webdavReconfigBtn">⚙️ 重新配置</button>
-                                    <button class="btn-danger" id="disconnectWebdavBtn">断开连接</button>
+                                    <button class="btn-primary" id="syncUpBtn">⬆️ 上传到云端</button>
+                                    <button class="btn-secondary" id="syncDownBtn">⬇️ 从云端下载</button>
+                                    <button class="btn-secondary" id="reconfigBtn">⚙️ 更换 Token</button>
+                                    <button class="btn-danger" id="disconnectBtn">断开连接</button>
                                 </div>
-                                <p class="sync-hint">💾 上次同步: <span id="webdavLastSyncTimeText">从未</span></p>
+                                <p class="sync-hint">💾 上次同步: <span id="lastSyncTimeText">从未</span></p>
                             </div>
                         </div>
                     </div>
@@ -381,7 +364,6 @@
     </div>
 
     <script src="sync.js"></script>
-    <script src="webdav-sync.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

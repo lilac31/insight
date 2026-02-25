@@ -192,7 +192,7 @@ class StorageManager {
 class InsightApp {
     constructor() {
         this.storage = new StorageManager();
-        this.cloudSync = new WebDAVSyncManager(this.storage); // 切换到 WebDAV
+        this.cloudSync = new CloudSyncManager(this.storage); // GitHub Gist
         this.notes = [];
         this.customTags = [];
         this.currentFilter = 'all';
@@ -257,18 +257,15 @@ class InsightApp {
         this.exportBtn = document.getElementById('exportBtn');
         this.syncBtn = document.getElementById('syncBtn');
         
-        // WebDAV Sync Elements
+        // GitHub Sync Elements
         this.closeSyncBtn = document.getElementById('closeSyncBtn');
-        this.webdavServer = document.getElementById('webdavServer');
-        this.webdavUsername = document.getElementById('webdavUsername');
-        this.webdavPassword = document.getElementById('webdavPassword');
-        this.testWebdavBtn = document.getElementById('testWebdavBtn');
-        this.connectWebdavBtn = document.getElementById('connectWebdavBtn');
-        this.webdavConnected = document.getElementById('webdavConnected');
-        this.webdavSyncUpBtn = document.getElementById('webdavSyncUpBtn');
-        this.webdavSyncDownBtn = document.getElementById('webdavSyncDownBtn');
-        this.webdavReconfigBtn = document.getElementById('webdavReconfigBtn');
-        this.disconnectWebdavBtn = document.getElementById('disconnectWebdavBtn');
+        this.githubToken = document.getElementById('githubToken');
+        this.connectGithubBtn = document.getElementById('connectGithubBtn');
+        this.githubConnected = document.getElementById('githubConnected');
+        this.syncUpBtn = document.getElementById('syncUpBtn');
+        this.syncDownBtn = document.getElementById('syncDownBtn');
+        this.reconfigBtn = document.getElementById('reconfigBtn');
+        this.disconnectBtn = document.getElementById('disconnectBtn');
         this.downloadBackupBtn = document.getElementById('downloadBackupBtn');
         this.uploadBackupBtn = document.getElementById('uploadBackupBtn');
         this.fileInput = document.getElementById('fileInput');
@@ -365,28 +362,14 @@ class InsightApp {
         this.exportBtn.addEventListener('click', () => this.exportAllData());
         
         // Cloud Sync
-        // Cloud Sync - WebDAV
+        // Cloud Sync - GitHub Gist
         this.syncBtn.addEventListener('click', () => this.openSyncModal());
         this.closeSyncBtn.addEventListener('click', () => this.closeModal(this.syncModal));
-        
-        if (this.testWebdavBtn) {
-            this.testWebdavBtn.addEventListener('click', () => this.testWebDAVConnection());
-        }
-        if (this.connectWebdavBtn) {
-            this.connectWebdavBtn.addEventListener('click', () => this.connectWebDAV());
-        }
-        if (this.webdavSyncUpBtn) {
-            this.webdavSyncUpBtn.addEventListener('click', () => this.handleWebDAVSyncUp());
-        }
-        if (this.webdavSyncDownBtn) {
-            this.webdavSyncDownBtn.addEventListener('click', () => this.handleWebDAVSyncDown());
-        }
-        if (this.webdavReconfigBtn) {
-            this.webdavReconfigBtn.addEventListener('click', () => this.reconfigureWebDAV());
-        }
-        if (this.disconnectWebdavBtn) {
-            this.disconnectWebdavBtn.addEventListener('click', () => this.disconnectWebDAV());
-        }
+        this.connectGithubBtn.addEventListener('click', () => this.connectGitHub());
+        this.syncUpBtn.addEventListener('click', () => this.handleSyncUp());
+        this.syncDownBtn.addEventListener('click', () => this.handleSyncDown());
+        this.reconfigBtn.addEventListener('click', () => this.reconfigureGitHub());
+        this.disconnectBtn.addEventListener('click', () => this.disconnectGitHub());
         
         this.downloadBackupBtn.addEventListener('click', () => this.exportAllData());
         this.uploadBackupBtn.addEventListener('click', () => this.fileInput.click());
@@ -1395,8 +1378,8 @@ class InsightApp {
         const badge = document.getElementById('syncStatusBadge');
         
         if (isConnected) {
-            document.getElementById('webdavSyncContent').querySelector('.sync-setup').style.display = 'none';
-            this.webdavConnected.style.display = 'block';
+            document.getElementById('githubSyncContent').querySelector('.sync-setup').style.display = 'none';
+            this.githubConnected.style.display = 'block';
             this.syncSettings.style.display = 'block';
             
             // Update badge
@@ -1409,7 +1392,7 @@ class InsightApp {
             const lastSync = this.cloudSync.getLastSyncTime();
             if (lastSync) {
                 const timeStr = this.formatTime(lastSync);
-                document.getElementById('webdavLastSyncTimeText').textContent = timeStr;
+                document.getElementById('lastSyncTimeText').textContent = timeStr;
             }
             
             // Update auto sync settings
@@ -1419,8 +1402,8 @@ class InsightApp {
             // Update storage info
             this.updateStorageInfo();
         } else {
-            document.getElementById('webdavSyncContent').querySelector('.sync-setup').style.display = 'block';
-            this.webdavConnected.style.display = 'none';
+            document.getElementById('githubSyncContent').querySelector('.sync-setup').style.display = 'block';
+            this.githubConnected.style.display = 'none';
             this.syncSettings.style.display = 'none';
             
             // Update badge
@@ -1464,75 +1447,42 @@ class InsightApp {
     }
 
     // WebDAV Sync Methods
-    async testWebDAVConnection() {
-        const server = this.webdavServer.value.trim();
-        const username = this.webdavUsername.value.trim();
-        const password = this.webdavPassword.value.trim();
-
-        if (!server || !username || !password) {
-            alert('请填写完整的配置信息');
+    // GitHub Sync Methods
+    connectGitHub() {
+        const token = this.githubToken.value.trim();
+        
+        if (!token) {
+            alert('请输入 GitHub Token');
             return;
         }
-
-        this.testWebdavBtn.disabled = true;
-        this.testWebdavBtn.textContent = '测试中...';
-
-        try {
-            this.cloudSync.saveConfig(server, username, password);
-            const result = await this.cloudSync.testConnection();
-            
+        
+        this.connectGithubBtn.disabled = true;
+        this.connectGithubBtn.textContent = '连接中...';
+        
+        this.cloudSync.saveToken(token);
+        
+        // 测试 Token 是否有效
+        this.cloudSync.syncUp().then(result => {
             if (result.success) {
-                alert('✅ ' + result.message);
+                alert('✅ 连接成功！');
+                this.updateSyncUI();
+                this.cloudSync.startAutoSync();
             } else {
-                alert('❌ ' + result.message);
-                this.cloudSync.clearConfig();
+                alert('❌ Token 无效: ' + result.message);
+                this.cloudSync.clearToken();
             }
-        } catch (error) {
-            alert('❌ 测试失败: ' + error.message);
-            this.cloudSync.clearConfig();
-        } finally {
-            this.testWebdavBtn.disabled = false;
-            this.testWebdavBtn.textContent = '🔌 测试连接';
-        }
-    }
-
-    async connectWebDAV() {
-        const server = this.webdavServer.value.trim();
-        const username = this.webdavUsername.value.trim();
-        const password = this.webdavPassword.value.trim();
-
-        if (!server || !username || !password) {
-            alert('请填写完整的配置信息');
-            return;
-        }
-
-        this.connectWebdavBtn.disabled = true;
-        this.connectWebdavBtn.textContent = '连接中...';
-
-        try {
-            this.cloudSync.saveConfig(server, username, password);
-            
-            // 测试连接
-            const testResult = await this.cloudSync.testConnection();
-            if (!testResult.success) {
-                throw new Error(testResult.message);
-            }
-
-            alert('✅ 连接成功！');
-            this.updateSyncUI();
-            this.cloudSync.startAutoSync();
-        } catch (error) {
+        }).catch(error => {
             alert('❌ 连接失败: ' + error.message);
-            this.cloudSync.clearConfig();
-        } finally {
-            this.connectWebdavBtn.disabled = false;
-            this.connectWebdavBtn.textContent = '💾 保存并连接';
-        }
+            this.cloudSync.clearToken();
+        }).finally(() => {
+            this.connectGithubBtn.disabled = false;
+            this.connectGithubBtn.textContent = '💾 保存并连接';
+        });
     }
 
-    async handleWebDAVSyncUp() {
-        this.webdavSyncUpBtn.disabled = true;
-        this.webdavSyncUpBtn.textContent = '上传中...';
+    async handleSyncUp() {
+        this.syncUpBtn.disabled = true;
+        this.syncUpBtn.textContent = '上传中...';
 
         const result = await this.cloudSync.syncUp();
         
@@ -1543,17 +1493,17 @@ class InsightApp {
             alert('❌ 上传失败: ' + result.message);
         }
 
-        this.webdavSyncUpBtn.disabled = false;
-        this.webdavSyncUpBtn.textContent = '⬆️ 上传到云端';
+        this.syncUpBtn.disabled = false;
+        this.syncUpBtn.textContent = '⬆️ 上传到云端';
     }
 
-    async handleWebDAVSyncDown() {
+    async handleSyncDown() {
         if (!confirm('从云端下载会覆盖本地数据，确定继续吗？\n\n建议先导出本地备份！')) {
             return;
         }
 
-        this.webdavSyncDownBtn.disabled = true;
-        this.webdavSyncDownBtn.textContent = '下载中...';
+        this.syncDownBtn.disabled = true;
+        this.syncDownBtn.textContent = '下载中...';
 
         const result = await this.cloudSync.syncDown();
         
@@ -1564,31 +1514,54 @@ class InsightApp {
             alert('❌ 下载失败: ' + result.message);
         }
 
-        this.webdavSyncDownBtn.disabled = false;
-        this.webdavSyncDownBtn.textContent = '⬇️ 从云端下载';
+        this.syncDownBtn.disabled = false;
+        this.syncDownBtn.textContent = '⬇️ 从云端下载';
     }
 
-    reconfigureWebDAV() {
-        if (!confirm('确定要重新配置吗？\n\n建议先导出本地备份！')) {
-            return;
-        }
-
-        document.getElementById('webdavSyncContent').querySelector('.sync-setup').style.display = 'block';
-        this.webdavConnected.style.display = 'none';
+    reconfigureGitHub() {
+        const newToken = prompt('请输入新的 GitHub Token:\n\n旧 Token 将被替换');
         
-        // 填充当前配置
-        const config = this.cloudSync.getConfig();
-        this.webdavServer.value = config.server.replace('https://', '').replace('http://', '');
-        this.webdavUsername.value = config.username;
-        this.webdavPassword.value = '';
-    }
-
-    disconnectWebDAV() {
-        if (!confirm('确定要断开连接吗？\n\n本地数据不会被删除。')) {
+        if (!newToken || !newToken.trim()) {
             return;
         }
 
-        this.cloudSync.clearConfig();
+        const token = newToken.trim();
+        
+        // 保存 Gist ID，避免丢失
+        const gistId = localStorage.getItem('insight_gist_id');
+        
+        // 更新 Token
+        this.cloudSync.saveToken(token);
+        
+        // 测试新 Token 是否有效
+        this.syncUpBtn.disabled = true;
+        this.syncUpBtn.textContent = '测试中...';
+        
+        this.cloudSync.syncUp().then(result => {
+            if (result.success) {
+                alert('✅ Token 更换成功！');
+                this.updateSyncUI();
+            } else {
+                alert('❌ 新 Token 无效: ' + result.message + '\n\n已恢复旧 Token。');
+                // 如果新 Token 失败，恢复旧状态
+                if (gistId) {
+                    localStorage.setItem('insight_gist_id', gistId);
+                }
+            }
+        }).catch(error => {
+            alert('❌ Token 测试失败: ' + error.message);
+        }).finally(() => {
+            this.syncUpBtn.disabled = false;
+            this.syncUpBtn.textContent = '⬆️ 上传到云端';
+        });
+    }
+
+    disconnectGitHub() {
+        if (!confirm('确定要断开 GitHub 连接吗？\n\n云端数据不会被删除，只是断开本地连接。')) {
+            return;
+        }
+
+        this.cloudSync.clearToken();
         this.cloudSync.stopAutoSync();
         this.updateSyncUI();
         alert('已断开连接');
