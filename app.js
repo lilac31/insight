@@ -368,12 +368,26 @@ class InsightApp {
         // Cloud Sync - WebDAV
         this.syncBtn.addEventListener('click', () => this.openSyncModal());
         this.closeSyncBtn.addEventListener('click', () => this.closeModal(this.syncModal));
-        this.testWebdavBtn.addEventListener('click', () => this.testWebDAVConnection());
-        this.connectWebdavBtn.addEventListener('click', () => this.connectWebDAV());
-        this.webdavSyncUpBtn.addEventListener('click', () => this.handleWebDAVSyncUp());
-        this.webdavSyncDownBtn.addEventListener('click', () => this.handleWebDAVSyncDown());
-        this.webdavReconfigBtn.addEventListener('click', () => this.reconfigureWebDAV());
-        this.disconnectWebdavBtn.addEventListener('click', () => this.disconnectWebDAV());
+        
+        if (this.testWebdavBtn) {
+            this.testWebdavBtn.addEventListener('click', () => this.testWebDAVConnection());
+        }
+        if (this.connectWebdavBtn) {
+            this.connectWebdavBtn.addEventListener('click', () => this.connectWebDAV());
+        }
+        if (this.webdavSyncUpBtn) {
+            this.webdavSyncUpBtn.addEventListener('click', () => this.handleWebDAVSyncUp());
+        }
+        if (this.webdavSyncDownBtn) {
+            this.webdavSyncDownBtn.addEventListener('click', () => this.handleWebDAVSyncDown());
+        }
+        if (this.webdavReconfigBtn) {
+            this.webdavReconfigBtn.addEventListener('click', () => this.reconfigureWebDAV());
+        }
+        if (this.disconnectWebdavBtn) {
+            this.disconnectWebdavBtn.addEventListener('click', () => this.disconnectWebDAV());
+        }
+        
         this.downloadBackupBtn.addEventListener('click', () => this.exportAllData());
         this.uploadBackupBtn.addEventListener('click', () => this.fileInput.click());
         this.fileInput.addEventListener('change', (e) => {
