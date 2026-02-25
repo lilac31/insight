@@ -145,13 +145,55 @@ class CloudSyncManager {
             const data = {
                 notes: this.storage.getNotes(),
                 customTags: this.storage.getCustomTags(),
+                tagColors: this.storage.getTagColors(),
                 syncTime: new Date().toISOString(),
                 version: '1.0'
             };
 
+            // 检查数据大小
+            const dataStr = JSON.stringify(data, null, 2);
+            const sizeInBytes = new Blob([dataStr]).size;
+            const sizeInKB = (sizeInBytes / 1024).toFixed(2);
+            const sizeInMB = (sizeInBytes / (1024 * 1024)).toFixed(2);
+            
+            console.log(`📊 数据大小: ${sizeInKB} KB (${sizeInMB} MB)`);
+            
+            // 存储大小警告阈值
+            const WARNING_SIZE = 800 * 1024; // 800 KB
+            const MAX_SIZE = 1024 * 1024; // 1 MB
+            
+            if (sizeInBytes >= MAX_SIZE) {
+                return { 
+                    success: false, 
+                    message: `数据大小 (${sizeInMB} MB) 超过 GitHub Gist 限制 (1 MB)！\n\n请导出本地备份并清理旧数据。`,
+                    size: sizeInBytes,
+                    warning: 'critical'
+                };
+            }
+            
+            if (sizeInBytes >= WARNING_SIZE) {
+                const percentage = ((sizeInBytes / MAX_SIZE) * 100).toFixed(0);
+                const message = `⚠️ 容量警告\n\n当前数据: ${sizeInKB} KB\n已使用: ${percentage}%\n\n建议尽快导出备份并清理数据，避免超过 1 MB 限制。`;
+                
+                // 记录警告时间，避免频繁提示
+                const lastWarning = localStorage.getItem('insight_size_warning');
+                const now = Date.now();
+                
+                if (!lastWarning || (now - parseInt(lastWarning)) > 24 * 60 * 60 * 1000) {
+                    // 24小时内只提示一次
+                    localStorage.setItem('insight_size_warning', now.toString());
+                    setTimeout(() => alert(message), 500); // 延迟显示，避免阻塞上传
+                }
+            }
+
             await this.updateGist(data);
             this.updateLastSyncTime();
-            return { success: true, message: '上传成功！' };
+            
+            return { 
+                success: true, 
+                message: '上传成功！',
+                size: sizeInBytes
+            };
         } catch (error) {
             console.error('同步上传失败:', error);
             return { success: false, message: error.message };
@@ -230,6 +272,34 @@ class CloudSyncManager {
 
     getSyncInterval() {
         return parseInt(localStorage.getItem(this.SYNC_INTERVAL_KEY) || '10');
+    }
+
+    // 获取数据大小信息
+    getDataSizeInfo() {
+        const data = {
+            notes: this.storage.getNotes(),
+            customTags: this.storage.getCustomTags(),
+            tagColors: this.storage.getTagColors(),
+            syncTime: new Date().toISOString(),
+            version: '1.0'
+        };
+        
+        const dataStr = JSON.stringify(data, null, 2);
+        const sizeInBytes = new Blob([dataStr]).size;
+        const sizeInKB = (sizeInBytes / 1024).toFixed(2);
+        const sizeInMB = (sizeInBytes / (1024 * 1024)).toFixed(3);
+        const percentage = ((sizeInBytes / (1024 * 1024)) * 100).toFixed(1);
+        
+        return {
+            bytes: sizeInBytes,
+            kb: sizeInKB,
+            mb: sizeInMB,
+            percentage: percentage,
+            notesCount: data.notes.length,
+            tagsCount: data.customTags.length,
+            isWarning: sizeInBytes >= 800 * 1024, // 800 KB
+            isCritical: sizeInBytes >= 1024 * 1024 // 1 MB
+        };
     }
 }
 

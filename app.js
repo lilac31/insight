@@ -1390,6 +1390,9 @@ class InsightApp {
             this.autoSyncEnabled.checked = this.cloudSync.isAutoSyncEnabled();
             this.syncInterval.value = this.cloudSync.getSyncInterval().toString();
             
+            // Update storage info
+            this.updateStorageInfo();
+            
             // Update status
             document.getElementById('syncStatus').classList.add('connected');
             document.querySelector('.sync-status-text').textContent = '已连接云端';
@@ -1401,9 +1404,41 @@ class InsightApp {
             this.githubConnected.style.display = 'none';
             this.syncSettings.style.display = 'none';
             
+            // Hide storage info when disconnected
+            const storageInfo = document.getElementById('storageInfo');
+            if (storageInfo) {
+                storageInfo.style.display = 'none';
+            }
+            
             document.getElementById('syncStatus').classList.remove('connected');
             document.querySelector('.sync-status-text').textContent = '未连接云端';
             document.getElementById('lastSyncTime').textContent = '';
+        }
+    }
+
+    updateStorageInfo() {
+        const storageInfo = document.getElementById('storageInfo');
+        if (!storageInfo) return;
+        
+        storageInfo.style.display = 'block';
+        
+        const info = this.cloudSync.getDataSizeInfo();
+        
+        // Update size display
+        document.getElementById('storageSize').textContent = info.kb + ' KB';
+        document.getElementById('storageNotesCount').textContent = info.notesCount;
+        document.getElementById('storageTagsCount').textContent = info.tagsCount;
+        
+        // Update progress bar
+        const barFill = document.getElementById('storageBarFill');
+        barFill.style.width = info.percentage + '%';
+        
+        // Change color based on usage
+        barFill.classList.remove('warning', 'critical');
+        if (info.isCritical) {
+            barFill.classList.add('critical');
+        } else if (info.isWarning) {
+            barFill.classList.add('warning');
         }
     }
 
@@ -1447,10 +1482,35 @@ class InsightApp {
         
         if (result.success) {
             alert('✅ ' + result.message);
-            this.updateSyncUI();
+            this.updateSyncUI(); // 更新存储信息
         } else {
             alert('❌ 上传失败: ' + result.message);
         }
+
+        this.syncUpBtn.disabled = false;
+        this.syncUpBtn.textContent = '⬆️ 上传到云端';
+    }
+
+    async handleSyncDown() {
+        if (!confirm('从云端下载会覆盖本地数据，确定继续吗？\n\n建议先导出本地备份！')) {
+            return;
+        }
+
+        this.syncDownBtn.disabled = true;
+        this.syncDownBtn.textContent = '下载中...';
+
+        const result = await this.cloudSync.syncDown();
+        
+        if (result.success) {
+            alert('✅ ' + result.message + '\n\n即将刷新页面...');
+            location.reload();
+        } else {
+            alert('❌ 下载失败: ' + result.message);
+        }
+
+        this.syncDownBtn.disabled = false;
+        this.syncDownBtn.textContent = '⬇️ 从云端下载';
+    }
 
         this.syncUpBtn.disabled = false;
         this.syncUpBtn.textContent = '⬆️ 上传到云端';
