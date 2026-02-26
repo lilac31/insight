@@ -266,6 +266,7 @@ class InsightApp {
         this.githubConnected = document.getElementById('githubConnected');
         this.gistIdDisplay = document.getElementById('gistIdDisplay');
         this.copyGistIdBtn = document.getElementById('copyGistIdBtn');
+        this.fullSyncBtn = document.getElementById('fullSyncBtn');
         this.syncUpBtn = document.getElementById('syncUpBtn');
         this.syncDownBtn = document.getElementById('syncDownBtn');
         this.reconfigBtn = document.getElementById('reconfigBtn');
@@ -370,6 +371,10 @@ class InsightApp {
         this.syncBtn.addEventListener('click', () => this.openSyncModal());
         this.closeSyncBtn.addEventListener('click', () => this.closeModal(this.syncModal));
         this.connectGithubBtn.addEventListener('click', () => this.connectGitHub());
+        
+        if (this.fullSyncBtn) {
+            this.fullSyncBtn.addEventListener('click', () => this.handleFullSync());
+        }
         this.syncUpBtn.addEventListener('click', () => this.handleSyncUp());
         this.syncDownBtn.addEventListener('click', () => this.handleSyncDown());
         this.reconfigBtn.addEventListener('click', () => this.reconfigureGitHub());
@@ -1535,6 +1540,40 @@ class InsightApp {
                 this.connectGithubBtn.disabled = false;
                 this.connectGithubBtn.textContent = '💾 连接';
             });
+        }
+    }
+
+    async handleFullSync() {
+        if (!confirm('🔄 双向同步会执行以下操作:\n\n1. 从云端下载数据并合并到本地\n2. 上传合并后的完整数据到云端\n\n这样可以确保本地和云端数据完全一致。\n\n是否继续?')) {
+            return;
+        }
+
+        this.fullSyncBtn.disabled = true;
+        this.fullSyncBtn.textContent = '🔄 同步中...';
+
+        try {
+            // 步骤1: 下载并合并
+            const downloadResult = await this.cloudSync.syncDown();
+            if (!downloadResult.success) {
+                throw new Error('下载失败: ' + downloadResult.message);
+            }
+            
+            // 步骤2: 上传合并后的数据
+            const uploadResult = await this.cloudSync.syncUp();
+            if (!uploadResult.success) {
+                throw new Error('上传失败: ' + uploadResult.message);
+            }
+            
+            // 刷新界面
+            this.loadNotes();
+            this.updateSyncUI();
+            
+            alert('✅ 双向同步完成！\n\n' + downloadResult.message + '\n已确保本地和云端数据一致。');
+        } catch (error) {
+            alert('❌ 同步失败: ' + error.message);
+        } finally {
+            this.fullSyncBtn.disabled = false;
+            this.fullSyncBtn.textContent = '🔄 双向同步';
         }
     }
 

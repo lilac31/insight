@@ -308,8 +308,13 @@
                                     <p class="sync-hint-small">💡 在其他设备上输入相同的 Token 即可同步此 Gist</p>
                                 </div>
                                 <div class="sync-actions">
-                                    <button class="btn-primary" id="syncUpBtn">⬆️ 上传到云端</button>
+                                    <button class="btn-primary btn-sync-full" id="fullSyncBtn">🔄 双向同步</button>
+                                </div>
+                                <div class="sync-actions" style="margin-top: 8px;">
+                                    <button class="btn-secondary" id="syncUpBtn">⬆️ 上传到云端</button>
                                     <button class="btn-secondary" id="syncDownBtn">⬇️ 从云端下载</button>
+                                </div>
+                                <div class="sync-actions" style="margin-top: 8px;">
                                     <button class="btn-secondary" id="reconfigBtn">⚙️ 更换 Token</button>
                                     <button class="btn-danger" id="disconnectBtn">断开连接</button>
                                 </div>

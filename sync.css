@@ -254,6 +254,12 @@
     min-width: 120px; /* 确保按钮有最小宽度 */
 }
 
+.btn-sync-full {
+    width: 100%;
+    font-weight: 600;
+    font-size: 15px;
+}
+
 .btn-secondary {
     background: var(--bg-color);
     color: var(--text-primary);
