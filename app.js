@@ -1564,14 +1564,14 @@ class InsightApp {
                 throw new Error('上传失败: ' + uploadResult.message);
             }
             
-            // 刷新界面
-            this.loadNotes();
-            this.updateSyncUI();
+            alert('✅ 双向同步完成！\n\n' + downloadResult.message + '\n已确保本地和云端数据一致。\n\n即将刷新页面...');
             
-            alert('✅ 双向同步完成！\n\n' + downloadResult.message + '\n已确保本地和云端数据一致。');
+            // 延迟刷新,让用户看到提示
+            setTimeout(() => {
+                location.reload();
+            }, 500);
         } catch (error) {
             alert('❌ 同步失败: ' + error.message);
-        } finally {
             this.fullSyncBtn.disabled = false;
             this.fullSyncBtn.textContent = '🔄 双向同步';
         }
