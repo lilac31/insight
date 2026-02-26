@@ -330,8 +330,25 @@ class CloudSyncManager {
     // Sync Operations
     async syncUp() {
         try {
+            // 先尝试从云端获取数据并合并
+            let notesToUpload = this.storage.getNotes();
+            
+            const gistId = localStorage.getItem(this.GIST_ID_KEY);
+            if (gistId) {
+                try {
+                    const cloudData = await this.getGist();
+                    if (cloudData.notes && Array.isArray(cloudData.notes)) {
+                        // 合并云端和本地的笔记
+                        notesToUpload = this.mergeNotes(notesToUpload, cloudData.notes);
+                        console.log(`📤 合并后上传: ${notesToUpload.length} 条笔记`);
+                    }
+                } catch (e) {
+                    console.warn('无法获取云端数据,将直接上传本地数据:', e.message);
+                }
+            }
+            
             const data = {
-                notes: this.storage.getNotes(),
+                notes: notesToUpload,
                 customTags: this.storage.getCustomTags(),
                 tagColors: this.storage.getTagColors(),
                 syncTime: new Date().toISOString(),
@@ -367,21 +384,60 @@ class CloudSyncManager {
 
     async syncDown() {
         try {
-            const data = await this.getGist();
+            const cloudData = await this.getGist();
             
-            if (data.notes && Array.isArray(data.notes)) {
-                this.storage.saveNotes(data.notes);
+            // 获取本地数据
+            const localNotes = this.storage.getNotes();
+            const localTags = this.storage.getCustomTags();
+            
+            // 合并笔记 (按 ID 去重,保留最新的)
+            if (cloudData.notes && Array.isArray(cloudData.notes)) {
+                const mergedNotes = this.mergeNotes(localNotes, cloudData.notes);
+                this.storage.saveNotes(mergedNotes);
+                console.log(`📥 合并笔记: 本地 ${localNotes.length} 条 + 云端 ${cloudData.notes.length} 条 = ${mergedNotes.length} 条`);
             }
-            if (data.customTags && Array.isArray(data.customTags)) {
-                this.storage.saveCustomTags(data.customTags);
+            
+            // 合并标签 (去重)
+            if (cloudData.customTags && Array.isArray(cloudData.customTags)) {
+                const mergedTags = [...new Set([...localTags, ...cloudData.customTags])];
+                this.storage.saveCustomTags(mergedTags);
+            }
+            
+            // 标签颜色直接使用云端的
+            if (cloudData.tagColors) {
+                localStorage.setItem('insight_tag_colors', JSON.stringify(cloudData.tagColors));
             }
 
             this.updateLastSyncTime();
-            return { success: true, message: '下载成功！' };
+            return { 
+                success: true, 
+                message: `合并成功！共 ${this.storage.getNotes().length} 条笔记` 
+            };
         } catch (error) {
             console.error('同步下载失败:', error);
             return { success: false, message: error.message };
         }
+    }
+    
+    // 合并笔记:按 ID 去重,保留最新的
+    mergeNotes(localNotes, cloudNotes) {
+        const notesMap = new Map();
+        
+        // 先加入本地笔记
+        for (const note of localNotes) {
+            notesMap.set(note.id, note);
+        }
+        
+        // 加入云端笔记,如果 ID 相同则比较时间戳
+        for (const note of cloudNotes) {
+            const existing = notesMap.get(note.id);
+            if (!existing || note.timestamp > existing.timestamp) {
+                notesMap.set(note.id, note);
+            }
+        }
+        
+        // 转换回数组并按时间排序
+        return Array.from(notesMap.values()).sort((a, b) => b.timestamp - a.timestamp);
     }
 
     updateLastSyncTime() {
